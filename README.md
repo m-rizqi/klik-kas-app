@@ -1,4 +1,4 @@
-# klik_kas
+# KlikKas
 
 A new Flutter project.
 
