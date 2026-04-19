@@ -1,4 +1,12 @@
 {
   "app_name": "KlikKas",
-  "@@locale": "id"
+  "@@locale": "id",
+  "welcome_to_klikkas_manage_your_shops_finances_quickly_and_easily": "Selamat Datang di KlikKas. Kelola keuangan toko Anda dengan cepat dan mudah.",
+  "sign_in_with_google": "Masuk dengan Google",
+  "sign_up": "Daftar Baru",
+  "by_continuing_you_agree_to_our": "Dengan melanjutkan, Anda menyetujui ",
+  "terms_of_service": "Ketentuan Layanan",
+  "dot": " kami.",
+  "today": "Hari Ini",
+  "yesterday": "Kemarin"
 }

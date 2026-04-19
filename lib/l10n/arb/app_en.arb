@@ -1,4 +1,12 @@
 {
   "app_name": "KlikKas",
-  "@@locale": "en"
+  "@@locale": "en",
+  "welcome_to_klikkas_manage_your_shops_finances_quickly_and_easily": "Welcome to KlikKas. Manage your shop's finances quickly and easily.",
+  "sign_in_with_google": "Sign in with Google",
+  "sign_up": "Sign Up",
+  "by_continuing_you_agree_to_our": "By continuing, you agree to our ",
+  "terms_of_service": "Terms of Service",
+  "dot": ".",
+  "today": "Today",
+  "yesterday": "Yesterday"
 }
