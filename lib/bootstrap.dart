@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:klik_kas/config/env/environment.dart';
 import 'package:klik_kas/core/constants/env.dart';
 import 'package:klik_kas/core/di/injection.dart' as injection;
@@ -40,9 +41,26 @@ Future<void> bootstrap(Env env, FutureOr<Widget> Function() builder) async {
 
 Future<void> initConfig(Env env) async {
   await environment.initConfig(env);
-  // await Supabase.initialize(
-  //   url: environment.supabaseUrl,
-  //   anonKey: environment.supabaseAnonKey,
-  // );
   await injection.init();
+  await Supabase.initialize(
+    url: environment.supabaseUrl,
+    anonKey: environment.supabaseAnonKey,
+  );
+  final googleSignIn = GoogleSignIn.instance;
+  unawaited(
+    googleSignIn
+        .initialize(
+          clientId: environment.gcpAndroidClientId,
+          serverClientId: environment.gcpWebClientId,
+        )
+        .then((_) {
+          googleSignIn.authenticationEvents
+              .listen((event) {
+                log('Google Sign In: $event');
+              })
+              .onError((e) {
+                log('Error Google Sign In: $e');
+              });
+        }),
+  );
 }

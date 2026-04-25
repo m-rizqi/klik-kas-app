@@ -2,9 +2,15 @@ import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:klik_kas/config/routes/route_names.dart';
 import 'package:klik_kas/core/utils/theme_utils.dart';
 import 'package:klik_kas/core/widgets/contents/animated_tap_target.dart';
+import 'package:klik_kas/features/auth/login/presentation/bloc/login_bloc.dart';
+import 'package:klik_kas/features/auth/login/presentation/bloc/login_event.dart';
+import 'package:klik_kas/features/auth/login/presentation/bloc/login_state.dart';
 import 'package:klik_kas/gen/assets.gen.dart';
 import 'package:klik_kas/l10n/l10n.dart';
 
@@ -18,36 +24,67 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Stack(
-        children: [
-          const _BackgroundOrbs(),
-          SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Padding(
-                      padding: EdgeInsetsGeometry.symmetric(horizontal: 32.w),
-                      child: Column(
-                        children: [
-                          SizedBox(height: 60.h),
-                          const _BrandSection(),
-                          SizedBox(height: 40.h),
-                          const _DashboardCard(),
-                          SizedBox(height: 20.h),
-                        ],
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<LoginBloc, LoginState>(
+          listenWhen: (prev, curr) =>
+          prev.status != curr.status && curr.status == LoginStatus.error,
+          listener: (context, state) {
+            if (state.errorResolver != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.errorResolver?.call(context) ?? 'error'),
+                ),
+              );
+            }
+          },
+        ),
+        BlocListener<LoginBloc, LoginState>(
+          listenWhen: (prev, curr) =>
+          prev.status != curr.status && curr.status == LoginStatus.success,
+          listener: (context, state) {
+            context.replace(AppRoutes.home);
+          },
+        ),
+        BlocListener<LoginBloc, LoginState>(
+          listenWhen: (prev, curr) =>
+          prev.status != curr.status && curr.status == LoginStatus.openSignUp,
+          listener: (context, state) {
+            context.push(AppRoutes.signup);
+          },
+        ),
+      ],
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: Stack(
+          children: [
+            const _BackgroundOrbs(),
+            SafeArea(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Padding(
+                        padding: EdgeInsetsGeometry.symmetric(horizontal: 32.w),
+                        child: Column(
+                          children: [
+                            SizedBox(height: 60.h),
+                            const _BrandSection(),
+                            SizedBox(height: 40.h),
+                            const _DashboardCard(),
+                            SizedBox(height: 20.h),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const _ActionsFooter(),
-              ],
+                  const _ActionsFooter(),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -227,42 +264,62 @@ class _GoogleSignInButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colorScheme = context.colorScheme;
-    return AnimatedTapTarget(
-      onTap: () {},
-      child: Container(
-        width: double.infinity,
-        height: 56.h,
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(14.r),
-          border: Border.all(
-            color: colorScheme.outlineVariant.withAlpha(75),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(10),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Assets.svg.googleLogo.svg(width: 22.r, height: 22.r),
-            SizedBox(width: 10.w),
-            Text(
-              l10n.sign_in_with_google,
-              style: TextStyle(
-                fontSize: 15.sp,
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurface,
+    return BlocBuilder<LoginBloc, LoginState>(
+      buildWhen: (p, c) => p.isGoogleLoading != c.isGoogleLoading,
+      builder: (context, state) {
+        return AnimatedTapTarget(
+          onTap: state.isLoading
+              ? null
+              : () =>
+              context.read<LoginBloc>().add(
+                const LoginGoogleSignInPressed(),
               ),
+          child: Container(
+            width: double.infinity,
+            height: 56.h,
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(14.r),
+              border: Border.all(
+                color: colorScheme.outlineVariant.withAlpha(75),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(10),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+            child: state.isGoogleLoading
+                ? Center(
+              child: SizedBox(
+                width: 20.w,
+                height: 20.w,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: colorScheme.primary,
+                ),
+              ),
+            )
+                : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Assets.svg.googleLogo.svg(width: 22.r, height: 22.r),
+                SizedBox(width: 10.w),
+                Text(
+                  l10n.sign_in_with_google,
+                  style: context.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -272,38 +329,53 @@ class _SignUp extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colorScheme = context.colorScheme;
-    return AnimatedTapTarget(
-      onTap: (){},
-      child: Container(
-        width: double.infinity,
-        height: 56.h,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [colorScheme.primary, colorScheme.primaryContainer],
-          ),
-          borderRadius: BorderRadius.circular(14.r),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.primary.withAlpha(30),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+    return BlocBuilder<LoginBloc, LoginState>(
+      buildWhen: (p, c) => p.isSignUpLoading != c.isSignUpLoading,
+      builder: (context, state) {
+        return AnimatedTapTarget(
+          onTap: state.isLoading
+              ? null
+              : () => context.read<LoginBloc>().add(const LoginSignUpPressed()),
+          child: Container(
+            width: double.infinity,
+            height: 56.h,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [colorScheme.primary, colorScheme.primaryContainer],
+              ),
+              borderRadius: BorderRadius.circular(14.r),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.primary.withAlpha(30),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Center(
-          child: Text(
-            l10n.sign_up,
-            style: TextStyle(
-              fontSize: 15.sp,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              letterSpacing: 0.2,
+            child: Center(
+              child: state.isSignUpLoading
+                  ? SizedBox(
+                width: 20.w,
+                height: 20.w,
+                child: const CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+                  : Text(
+                l10n.sign_up,
+                style: context.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: 0.2,
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -313,33 +385,24 @@ class _TermsText extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colorScheme = context.colorScheme;
+    final textTheme = context.textTheme;
     return Text.rich(
       TextSpan(
+        style: textTheme.labelSmall?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+        ),
         children: [
-          TextSpan(
-            text: '${l10n.by_continuing_you_agree_to_our} ',
-            style: TextStyle(
-              fontSize: 11.sp,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
+          TextSpan(text: '${l10n.by_continuing_you_agree_to_our} '),
           TextSpan(
             text: l10n.terms_of_service,
             recognizer: TapGestureRecognizer()
               ..onTap = () {},
             style: TextStyle(
-              fontSize: 11.sp,
               color: colorScheme.primary,
               decoration: TextDecoration.underline,
             ),
           ),
-          TextSpan(
-            text: l10n.dot,
-            style: TextStyle(
-              fontSize: 11.sp,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
+          TextSpan(text: l10n.dot),
         ],
       ),
       textAlign: TextAlign.center,

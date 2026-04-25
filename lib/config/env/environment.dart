@@ -11,7 +11,11 @@ class Environment {
   static Environment get instance => _instance;
 
   Env? env;
-  String get apiUrl => dotenv.env['API_URL'] ?? 'API URL not configured';
+  String get apiUrl => dotenv.env['API_URL'] ?? 'API_URL not configured';
+  String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? 'SUPABASE_URL not configured';
+  String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? 'SUPABASE_ANON_KEY not configured';
+  String get gcpWebClientId => dotenv.env['GCP_WEB_CLIENT_ID'] ?? 'GCP_WEB_CLIENT_ID not configured';
+  String get gcpAndroidClientId => dotenv.env['GCP_ANDROID_CLIENT_ID'] ?? 'GCP_ANDROID_CLIENT_ID not configured';
 
   Future<void> initConfig(Env env) async {
     try {

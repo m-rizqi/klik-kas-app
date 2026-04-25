@@ -13,3 +13,8 @@ class NetworkException implements Exception {
   NetworkException([this.message = 'Connectivity lost']);
   final String message;
 }
+
+class GoogleSignInCancelledException implements Exception {
+  GoogleSignInCancelledException();
+}
+

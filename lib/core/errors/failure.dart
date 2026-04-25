@@ -39,3 +39,8 @@ class ClientFailure extends Failure {
   const ClientFailure([String? message])
     : super(message ?? 'An unexpected error occurred.');
 }
+
+class GoogleSignInCancelledFailure extends Failure {
+  GoogleSignInCancelledFailure([String? message]) : super(message ?? 'Google sign in cancelled');
+
+}
